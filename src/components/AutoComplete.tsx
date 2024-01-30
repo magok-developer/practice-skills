@@ -1,69 +1,170 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import styled from "styled-components";
+import { IoIosClose, IoIosArrowDown } from "react-icons/io";
 
 const AutoComplete = () => {
-  const data = [
-    "rustic",
-    "antique",
-    "vinyl",
-    "vintage",
-    "refurbished",
-    "신품",
-    "빈티지",
-    "중고A급",
-    "중고B급",
-    "골동품",
+  const datas = [
+    "Leanne Graham",
+    "Ervin Howell",
+    "Clementine Bauch",
+    "Patricia Lebsack",
+    "Chelsey Dietrich",
+    "Mrs. Dennis Schulist",
+    "Kurtis Weissnat",
+    "Nicholas Runolfsdottir V",
+    "Glenna Reichert",
+    "Clementina DuBuque",
   ];
 
-  const [hasText, setHasText] = useState(false); //input에 값이 있는지 확인하는 용도
-  const [inputValue, setInputValue] = useState("");
-  const [options, setOptions] = useState(data);
+  const [inputValue, setInputValue] = useState(""); // input value
+  const [options, setOptions] = useState(datas); // select box option
+  const [visible, setVisible] = useState(false); // dropdown visible
+  const [searchType, setSearchType] = useState("input"); // input, select box type
 
   useEffect(() => {
-    if (inputValue === "") {
-      setHasText(false);
-      setOptions([]);
-    } else {
-      setOptions(
-        data.filter((option) => {
-          return option.includes(inputValue);
-        })
-      );
-    }
-  }, [inputValue]);
-  // input을 입력할 때마다, input을 포함(includes)한 요소들만 모아 options 배열 업데이트
+    setOptions(
+      datas.filter(
+        // input 입력 시 data에 있는 값 중 입력된 값을 포함하는 option만 걸러준 상태로 변경됨
+        (data) => data.toLowerCase().includes(inputValue.toLowerCase()) // 대소문자 구분 없음
+      )
+    );
+  }, [inputValue]); // inputValue가 변경 될 때 마다 실행
 
+  // input change 이벤트
   const handleInputChange = (e: any) => {
-    setInputValue(e.target.value);
-    setHasText(true);
+    const value = e.target.value;
+    setInputValue(value);
+    setVisible(value !== ""); // input이 비어있지 않은 경우에만 visible을 true로
   };
-  // input의 onChange 이벤트 때, 입력값을 inputValue에 저장하고 hasText값 갱신
 
-  // const handleDropDownClick = (clickedOption) => {
-  //   setInputValue(clickedOption);
-  // };
-  // 보여지는 자동완성 값 중 하나를 클릭하면 해당 값이 input에 할당
-
-  const handleDeleteButtonClick = (e: any) => {
-    setInputValue("");
+  // dropdown option click 이벤트
+  const handleDropDownClick = (clickedOption: string) => {
+    setInputValue(clickedOption); // click한 option으로 inputValue 변경
+    setVisible(false); // 선택 후 dropdown 보이지 않게함
   };
-  // 삭제 버튼을 누르면, inputValue를 초기화
+
+  // input 내용 remove 이벤트
+  const handleDeleteButtonClick = () => {
+    setInputValue(""); // input 내용 초기화
+    setSearchType("input"); // searchType 초기화
+    setVisible(false); // visible 초기화 -> 없으면 select를 클릭 하고 delete를 클릭하면 dropdown이 남아있는 상태에서 input으로 변경됨
+  };
+
+  // dropdown visible 이벤트 = type 을 select로 변경해주는 이벤트
+  const handleDropDownClickVisible = () => {
+    setVisible(!visible); // dropdown 보이게함
+    setSearchType("select"); // type을 select로 바꿔줌
+  };
 
   return (
-    <div className='autocomplete-wrapper'>
-      <div>
-        <input onChange={handleInputChange} value={inputValue}></input>
-        <div className='delete-button' onClick={handleDeleteButtonClick}>
-          &times;
-        </div>
-      </div>
-      {/* {hasText && (
-        <DropDown options={options} handleComboBox={handleDropDownClick} />
-      )} */}
-      {/* 입력된 텍스트가 있을 때만 드롭다운이 보여지도록 조건 설정 */}
-      {/* 하지 않을시, 아무 것도 입력하지 않은 상태에서도 드롭다운이 보여짐 */}
-    </div>
+    <AutoCompleteContainer>
+      <Title>Auto Complete</Title>
+      <InputContainer>
+        <input
+          type='text'
+          value={inputValue}
+          onChange={handleInputChange}
+          readOnly={searchType === "select"} //searchType이 select면 readOnly로 전환
+        />
+
+        <IconWrap>
+          <IoIosClose
+            className='delete-button'
+            onClick={handleDeleteButtonClick}
+          />
+
+          <IoIosArrowDown
+            className='dropdown'
+            onClick={handleDropDownClickVisible}
+          />
+        </IconWrap>
+      </InputContainer>
+
+      {visible && ( // visible이 true일 때 dropdown 보이게함
+        <DropDownContainer>
+          {options.map((option: any, idx: number) => (
+            <li key={idx} onClick={() => handleDropDownClick(option)}>
+              {option}
+            </li>
+          ))}
+        </DropDownContainer>
+      )}
+    </AutoCompleteContainer>
   );
 };
 
 export default AutoComplete;
+
+const AutoCompleteContainer = styled.div`
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  margin-top: 20px;
+`;
+
+const Title = styled.h3`
+  color: #378aff;
+`;
+
+const InputContainer = styled.div`
+  width: 300px;
+  display: flex;
+  justify-content: space-between;
+  padding: 10px 20px;
+  border: 1px solid #e2e2e2;
+  box-sizing: border-box;
+
+  input {
+    border: none;
+    outline: none;
+    font-size: 16px;
+  }
+
+  .delete-button,
+  .dropdown {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 20px;
+    cursor: pointer;
+  }
+
+  .dropdown {
+    font-size: 14px;
+  }
+`;
+
+const IconWrap = styled.div`
+  display: flex;
+  justify-content: center;
+  align-items: center;
+`;
+
+const DropDownContainer = styled.ul`
+  padding-inline-start: 0;
+  margin-block-start: 0;
+  margin-block-end: 0; // ul 태그에 기본으로 들어가있는 margin, padding 리셋
+
+  width: 300px;
+  display: flex;
+  flex-direction: column;
+  list-style-type: none; // ul 태그 점 없애기
+  margin-top: -1px;
+
+  border: 1px solid #e2e2e2;
+  box-sizing: border-box;
+
+  li {
+    display: flex;
+    align-items: center;
+    padding: 5px 20px;
+    cursor: pointer;
+    font-size: 12px;
+
+    &:hover {
+      background-color: #d0e8ff;
+      transition: 0.3s;
+    }
+  }
+`;
